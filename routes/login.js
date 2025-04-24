@@ -2,34 +2,17 @@ const express = require('express');
 const bcrypt = require('bcrypt')
 var jwt = require('jsonwebtoken');
 const secretKey = 'secretmoonriver'; // secretKey는 보안을 위해 일반적으로 .env 파일에 작성한다.
-const cookieParser = require('cookie-parser');
 
 const db = require('../db.js');
 const router = express.Router();
 
+const cookieParser = require('cookie-parser');
 router.use(cookieParser());
 
-const jwtAuthentication = (req, res, next) => {
-    const token = req.cookies.token; // 
-    
-    console.log(token);
-    
-    if (!token) {
-        return res.status(401).json({ message: '인증 토큰 없음', isLogin: false });
-    }
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || secretKey);
-        req.user = decoded;
+const authMiddleware = require('./auth.js');
 
 
-        next();
-    } catch (err) {
-        return res.status(403).json({ message: '유효하지 않은 토큰', isLogin: false });
-    }
-};
-
-router.get("/info", jwtAuthentication, (req, res) => {
+router.get("/info", authMiddleware, (req, res) => {
     res.json({
         isLogin: true,
         user: req.user
@@ -139,5 +122,4 @@ router.post('/', async (req, res) => {
     }
 }) 
 
-module.exports = jwtAuthentication;
 module.exports = router;

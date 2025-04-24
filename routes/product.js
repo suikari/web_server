@@ -4,6 +4,9 @@ const router = express.Router();
 
 const multer = require('multer');
 const path = require('path');
+const cookieParser = require('cookie-parser');
+
+router.use(cookieParser());
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -17,6 +20,8 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
+
+const authMiddleware = require('./auth.js');
 
 router.get('/', async (req, res) => {
 
@@ -94,7 +99,7 @@ router.put('/', async (req, res) => {
     }
 }) 
 
-router.delete('/', async (req, res) => {
+router.delete('/', authMiddleware , async (req, res) => {
     //res.body
     let {productId} = req.body;
 
