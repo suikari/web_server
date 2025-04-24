@@ -1,7 +1,7 @@
 const express = require('express')
-const bcrypt = require('bcrypt')
 const productRouter = require('./routes/product.js')
 const userRouter = require('./routes/user.js')
+const loginRouter = require('./routes/login.js')
 
 const cors = require('cors')
 
@@ -29,6 +29,7 @@ app.use(session({
 app.use("/product",productRouter);
 app.use("/user",userRouter);
 app.use('/uploads', express.static('uploads'));
+app.use("/login",loginRouter);
 
 
 app.listen(3000, ()=>{
