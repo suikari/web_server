@@ -69,6 +69,7 @@ router.post('/', async (req, res) => {
 
         let result = {};
 
+        console.log( userId, pwd ,list);
 
          if (list.length > 0) {
             let loginChk = await bcrypt.compare(pwd,list[0].pwd);

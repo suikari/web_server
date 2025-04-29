@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
 
 
         const [list] = await db.query(query);
-        const [cnt]    = await db.query("select count(*) as cnt from tbl_product where  productName like '%" + keyword +"%' ");
+        const [cnt]  = await db.query("select count(*) as cnt from tbl_product where  productName like '%" + keyword +"%' ");
 
         res.json({
             message: "호출 성공",
@@ -54,6 +54,7 @@ router.get('/', async (req, res) => {
         res.status(500).send('Server Error');
     }
 }) 
+
 
 router.post('/', async (req, res) => {
 
