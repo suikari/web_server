@@ -105,6 +105,7 @@ router.post('/', async (req, res) => {
                     message: "fail",
                     result: ""  //
                 }
+                res.json(result);
             }
             
 
@@ -113,9 +114,10 @@ router.post('/', async (req, res) => {
                 message: "fail",
                 result: ""  //
             }
+            res.json(result);
          }
 
-        res.json(result);
+       
 
     } catch(err) {
         console.log('fail');
