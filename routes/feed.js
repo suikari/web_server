@@ -56,7 +56,9 @@ router.get('/', async (req, res) => {
             feedId: row.id,
             userId: row.userId,
             content: row.content,
+            imageUrl : row.imageUrl,
             cdatetime: row.cdatetime,
+            title : row.title,
             images: []
           };
         }
