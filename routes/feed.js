@@ -30,20 +30,22 @@ router.get('/', async (req, res) => {
     try {
       if (userId) {
         query = `
-          SELECT f.*, i.imgNo, i.imgName, i.imgPath 
+          SELECT f.*, i.imgNo, i.imgName, i.imgPath , i.thumbnailYn
           FROM tbl_feed f 
           LEFT JOIN tbl_feed_img i ON f.id = i.feedId 
           WHERE f.userId = ?
+          order by i.thumbnailYn desc
         `;
         params = [userId];
       } else {
         query = `
-          SELECT f.*, i.imgNo, i.imgName, i.imgPath 
+          SELECT f.*, i.imgNo, i.imgName, i.imgPath  , i.thumbnailYn
           FROM tbl_feed f 
           LEFT JOIN tbl_feed_img i ON f.id = i.feedId
+          order by i.thumbnailYn desc
         `;
       }
-  
+
       const [rows] = await db.query(query, params);
   
       // feedId 기준으로 결과 그룹핑 (이미지 여러 개 처리)
@@ -56,7 +58,6 @@ router.get('/', async (req, res) => {
             feedId: row.id,
             userId: row.userId,
             content: row.content,
-            imageUrl : row.imageUrl,
             cdatetime: row.cdatetime,
             title : row.title,
             images: []
@@ -67,14 +68,15 @@ router.get('/', async (req, res) => {
           feedMap[feedId].images.push({
             imgNo: row.imgNo,
             imgName: row.imgName,
-            imgPath: row.imgPath
+            imgPath: row.imgPath,
+            imgthumbYn : row.thumbnailYn,
           });
         }
       });
   
       const feedList = Object.values(feedMap);
-      console.log("map",feedMap);
-      console.log("list",feedList);
+      //console.log("map",feedMap);
+      //console.log("list",feedList);
 
       result = {
         message: "success",
@@ -162,10 +164,10 @@ router.delete('/', authMiddleware ,async (req, res) => {
 
 router.post('/', async (req, res) => {
 
-    let { userId , content  } = req.body;
+    let { userId , content , title } = req.body;
     console.log( userId , content );
      try {
-         const result = await db.query("INSERT INTO tbl_feed(userId, content, cdatetime) VALUES (?,?,NOW())", [ userId , content ]);
+         const result = await db.query("INSERT INTO tbl_feed(userId, content, title , cdatetime) VALUES (?,?,?,NOW())", [ userId , content , title ]);
 
             // console.log(result);
         res.json({
@@ -183,7 +185,9 @@ router.post('/', async (req, res) => {
 router.post('/upload', upload.array('images'), async (req, res) => {
     const { feedId } = req.body;
     const files = req.files;
-  
+    let isthumbnail = true;
+    let thumbnailYn = 'Y';
+
     if (!files || files.length === 0) {
       return res.status(400).json({ message: "파일이 없습니다." });
     }
@@ -194,10 +198,25 @@ router.post('/upload', upload.array('images'), async (req, res) => {
       for (const file of files) {
         const fileName = file.originalname;
         const filePath = file.path;
-  
+
+        if (isthumbnail){
+          
+          const [thumb] = await db.query(
+            "SELECT * FROM TBL_FEED_IMG WHERE feedId = ?",
+            [feedId]
+          );
+
+          if (thumb[0]) {
+            isthumbnail = false;
+            thumbnailYn = 'N';
+          }
+    
+        }
+
+
         const result = await db.query(
-          "INSERT INTO TBL_FEED_IMG (imgNo, feedId, imgName, imgPath) VALUES (null, ?, ?, ?)",
-          [feedId, fileName, filePath]
+          "INSERT INTO TBL_FEED_IMG (imgNo, feedId, imgName, imgPath, thumbnailYn) VALUES (null, ?, ?, ?, ?)",
+          [feedId, fileName, filePath, thumbnailYn]
         );
   
         insertResults.push(result);
@@ -212,5 +231,47 @@ router.post('/upload', upload.array('images'), async (req, res) => {
       res.status(500).send("Server Error");
     }
   });
+
+  router.get('/comment/:feedId', async (req, res) => {
+
+    //res.body
+    let { feedId } = req.params;
+    let result ;
+     try {
+        const [list] = await db.query("SELECT * FROM TBL_FEED_comments WHERE feedId = ?",[feedId]);
+        
+        result = {
+            message: "success",
+            list : list  //
+        }
+  
+        res.json(result);
+  
+    } catch(err) {
+        console.log('fail');
+        res.status(500).send('Server Error');
+    }
+  }) 
+
+  router.post('/comment/', async (req, res) => {
+
+    //res.body
+    let { feedId } = req.params;
+    let result ;
+     try {
+        const [list] = await db.query("SELECT * FROM TBL_FEED_comments WHERE feedId = ?",[feedId]);
+        
+        result = {
+            message: "success",
+            list : list  //
+        }
+  
+        res.json(result);
+  
+    } catch(err) {
+        console.log('fail');
+        res.status(500).send('Server Error');
+    }
+  }) 
 
 module.exports = router;
